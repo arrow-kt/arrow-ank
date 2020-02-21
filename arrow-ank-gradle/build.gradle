@@ -1,9 +1,15 @@
 plugins {
-    id 'maven-publish'
+    id "maven-publish"
+    id "base"
+    id 'java-gradle-plugin'
+    id "org.jetbrains.kotlin.jvm"
+    id "org.jetbrains.kotlin.kapt"
+    id "net.rdrei.android.buildtimetracker"
+    id "org.jlleitschuh.gradle.ktlint"
 }
 
-apply plugin: 'java-gradle-plugin'
-apply plugin: 'kotlin'
+apply from: "$SUBPROJECT_CONF"
+apply from: "$PUBLISH_CONF"
 
 sourceSets {
     main.java.srcDirs += 'src/main/kotlin'
@@ -30,5 +36,3 @@ gradlePlugin {
         }
     }
 }
-
-apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
