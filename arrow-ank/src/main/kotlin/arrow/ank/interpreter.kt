@@ -179,7 +179,7 @@ val interpreter: AnkOps = object : AnkOps {
             val sw = StringWriter()
             val pw = PrintWriter(sw)
             e.printStackTrace(pw)
-            snip.copy(result = sw.toString().some())
+            return@mapIndexed snip.copy(result = sw.toString().some())
           } else {
             println(colored(ANSI_RED, "[✗ ${snippets.a} [${i + 1}]"))
             throw CompilationException(snippets.a, snip, e, msg = "\n" + """
