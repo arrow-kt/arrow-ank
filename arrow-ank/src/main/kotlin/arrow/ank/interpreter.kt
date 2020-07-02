@@ -214,7 +214,6 @@ val interpreter: AnkOps = object : AnkOps {
           })
           snip.copy(result = resultString)
         }
-
       }
     }
 
