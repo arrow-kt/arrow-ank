@@ -1,14 +1,9 @@
 package arrow.ank
 
-import arrow.core.NonEmptyList
-import arrow.core.ValidatedNel
+import arrow.core.*
 import arrow.core.extensions.list.traverse.sequence
 import arrow.core.extensions.nonemptylist.semigroup.semigroup
 import arrow.core.extensions.validated.applicative.applicative
-import arrow.core.fix
-import arrow.core.invalidNel
-import arrow.core.toT
-import arrow.core.validNel
 import java.nio.file.Path
 import kotlin.math.ln
 import kotlin.math.pow
@@ -24,6 +19,9 @@ fun Long.humanBytes(): String {
   return String.format("%.1f %sB", this / unit.toDouble().pow(exp.toDouble()), pre)
 }
 
+fun <A> toValidatedNel(a: Either<Throwable, A>): ValidatedNel<Throwable, A> =
+  a.fold({ e -> Validated.Invalid(NonEmptyList(e)) }, { a -> Validated.Valid(a) })
+
 suspend fun ank(source: Path, target: Path, compilerArgs: List<String>, ankOps: AnkOps): Unit = with(ankOps) {
   printConsole(colored(ANSI_PURPLE, AnkHeader))
   val heapSize = Runtime.getRuntime().totalMemory()
@@ -33,21 +31,20 @@ suspend fun ank(source: Path, target: Path, compilerArgs: List<String>, ankOps: 
   val path = createTargetDirectory(source, target)
 
   val validatedPaths = path.ankFiles().fold(listOf<ValidatedNel<Throwable, Path>>()) { acc, file ->
-    val res = try {
-      val totalHeap = Runtime.getRuntime().totalMemory()
-      val usedHeap = totalHeap - Runtime.getRuntime().freeMemory()
-      val p = file.path
-      val message = "Ank Compile: [${file.index}] ${path.relativize(p)} | Used Heap: ${usedHeap.humanBytes()}"
-      printConsole(colored(ANSI_GREEN, message))
-      val preProcessed = p.processMacros()
-      val (processed, snippets) = extractCode(preProcessed)
-      val compiledResult = compileCode(p toT snippets, compilerArgs)
-      val result = replaceAnkToLang(processed, compiledResult)
-      val generatedPath = generateFile(p, result)
-      generatedPath.validNel()
-    } catch (e: Throwable) {
-      e.invalidNel()
-    }
+    val res = ValidatedNel.fromEither(
+      Either.catch {
+        val totalHeap = Runtime.getRuntime().totalMemory()
+        val usedHeap = totalHeap - Runtime.getRuntime().freeMemory()
+        val p = file.path
+        val message = "Ank Compile: [${file.index}] ${path.relativize(p)} | Used Heap: ${usedHeap.humanBytes()}"
+        printConsole(colored(ANSI_GREEN, message))
+        val preProcessed = p.processMacros()
+        val (processed, snippets) = extractCode(preProcessed)
+        val compiledResult = compileCode(p toT snippets, compilerArgs)
+        val result = replaceAnkToLang(processed, compiledResult)
+        generateFile(p, result)
+      }.mapLeft { it.nel() }
+    )
 
     acc + res
   }.sequence(ValidatedNel.applicative(NonEmptyList.semigroup<Throwable>())).fix()
