@@ -4,7 +4,7 @@ package arrow.ank
 
 import java.nio.file.Paths
 
-suspend fun main(vararg args: String) {
+suspend fun main(vararg args: String) =
   when {
     args.size > 1 -> {
       ank(
@@ -16,4 +16,3 @@ suspend fun main(vararg args: String) {
     }
     else -> throw IllegalArgumentException("Required first 2 args as directory paths in this order: <required: source> <required: destination> <optional: classpath entries, one per arg..>")
   }
-}

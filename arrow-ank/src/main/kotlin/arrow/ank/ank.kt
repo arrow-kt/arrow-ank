@@ -1,10 +1,14 @@
 package arrow.ank
 
-import arrow.core.*
+import arrow.core.NonEmptyList
+import arrow.core.ValidatedNel
 import arrow.core.extensions.list.traverse.sequence
 import arrow.core.extensions.nonemptylist.semigroup.semigroup
 import arrow.core.extensions.validated.applicative.applicative
-import arrow.fx.coroutines.parTraverse
+import arrow.core.fix
+import arrow.core.invalidNel
+import arrow.core.toT
+import arrow.core.validNel
 import java.nio.file.Path
 import kotlin.math.ln
 import kotlin.math.pow
@@ -28,12 +32,12 @@ suspend fun ank(source: Path, target: Path, compilerArgs: List<String>, ankOps: 
   printConsole("Starting ank with Heap Size: ${heapSize.humanBytes()}, Max Heap Size: ${heapMaxSize.humanBytes()}")
   val path = createTargetDirectory(source, target)
 
-  val validatedPaths = path.ankFiles().toList().parTraverse {
-    try {
+  val validatedPaths = path.ankFiles().fold(listOf<ValidatedNel<Throwable, Path>>()) { acc, file ->
+    val res = try {
       val totalHeap = Runtime.getRuntime().totalMemory()
       val usedHeap = totalHeap - Runtime.getRuntime().freeMemory()
-      val p = it.path
-      val message = "Ank Compile: [${it.index}] ${path.relativize(p)} | Used Heap: ${usedHeap.humanBytes()}"
+      val p = file.path
+      val message = "Ank Compile: [${file.index}] ${path.relativize(p)} | Used Heap: ${usedHeap.humanBytes()}"
       printConsole(colored(ANSI_GREEN, message))
       val preProcessed = p.processMacros()
       val (processed, snippets) = extractCode(preProcessed)
@@ -44,7 +48,9 @@ suspend fun ank(source: Path, target: Path, compilerArgs: List<String>, ankOps: 
     } catch (e: Throwable) {
       e.invalidNel()
     }
-  }.sequence(Validated.applicative(NonEmptyList.semigroup())).fix()
+
+    acc + res
+  }.sequence(ValidatedNel.applicative(NonEmptyList.semigroup<Throwable>())).fix()
 
   validatedPaths.fold({ errors ->
     val separator = "\n----------------------------------------------------------------\n"
