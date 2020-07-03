@@ -1,6 +1,7 @@
 package arrow.ank
 
 import arrow.core.NonEmptyList
+import arrow.core.Validated
 import arrow.core.ValidatedNel
 import arrow.core.extensions.list.traverse.sequence
 import arrow.core.extensions.nonemptylist.semigroup.semigroup
@@ -9,6 +10,7 @@ import arrow.core.fix
 import arrow.core.invalidNel
 import arrow.core.toT
 import arrow.core.validNel
+import arrow.fx.coroutines.nonFatalOrThrow
 import java.nio.file.Path
 import kotlin.math.ln
 import kotlin.math.pow
@@ -24,6 +26,13 @@ fun Long.humanBytes(): String {
   return String.format("%.1f %sB", this / unit.toDouble().pow(exp.toDouble()), pre)
 }
 
+suspend fun <A> Validated.Companion.catchNel(f: suspend () -> A): ValidatedNel<Throwable, A> =
+  try {
+    f().validNel()
+  } catch (e: Throwable) {
+    e.nonFatalOrThrow().invalidNel()
+  }
+
 suspend fun ank(source: Path, target: Path, compilerArgs: List<String>, ankOps: AnkOps): Unit = with(ankOps) {
   printConsole(colored(ANSI_PURPLE, AnkHeader))
   val heapSize = Runtime.getRuntime().totalMemory()
@@ -33,7 +42,7 @@ suspend fun ank(source: Path, target: Path, compilerArgs: List<String>, ankOps: 
   val path = createTargetDirectory(source, target)
 
   val validatedPaths = path.ankFiles().fold(listOf<ValidatedNel<Throwable, Path>>()) { acc, file ->
-    val res = try {
+    val res = Validated.catchNel {
       val totalHeap = Runtime.getRuntime().totalMemory()
       val usedHeap = totalHeap - Runtime.getRuntime().freeMemory()
       val p = file.path
@@ -44,9 +53,7 @@ suspend fun ank(source: Path, target: Path, compilerArgs: List<String>, ankOps: 
       val compiledResult = compileCode(p toT snippets, compilerArgs)
       val result = replaceAnkToLang(processed, compiledResult)
       val generatedPath = generateFile(p, result)
-      generatedPath.validNel()
-    } catch (e: Throwable) {
-      e.invalidNel()
+      generatedPath
     }
 
     acc + res
