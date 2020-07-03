@@ -6,8 +6,6 @@ import arrow.core.extensions.list.traverse.sequence
 import arrow.core.extensions.nonemptylist.semigroup.semigroup
 import arrow.core.extensions.validated.applicative.applicative
 import arrow.core.fix
-import arrow.core.nel
-import arrow.core.toT
 import arrow.core.invalidNel
 import arrow.core.toT
 import arrow.core.validNel
