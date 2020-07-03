@@ -19,9 +19,6 @@ fun Long.humanBytes(): String {
   return String.format("%.1f %sB", this / unit.toDouble().pow(exp.toDouble()), pre)
 }
 
-fun <A> toValidatedNel(a: Either<Throwable, A>): ValidatedNel<Throwable, A> =
-  a.fold({ e -> Validated.Invalid(NonEmptyList(e)) }, { a -> Validated.Valid(a) })
-
 suspend fun ank(source: Path, target: Path, compilerArgs: List<String>, ankOps: AnkOps): Unit = with(ankOps) {
   printConsole(colored(ANSI_PURPLE, AnkHeader))
   val heapSize = Runtime.getRuntime().totalMemory()
