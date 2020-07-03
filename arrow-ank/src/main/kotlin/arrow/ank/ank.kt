@@ -1,6 +1,5 @@
 package arrow.ank
 
-import arrow.core.Either
 import arrow.core.NonEmptyList
 import arrow.core.ValidatedNel
 import arrow.core.extensions.list.traverse.sequence
@@ -9,6 +8,9 @@ import arrow.core.extensions.validated.applicative.applicative
 import arrow.core.fix
 import arrow.core.nel
 import arrow.core.toT
+import arrow.core.invalidNel
+import arrow.core.toT
+import arrow.core.validNel
 import java.nio.file.Path
 import kotlin.math.ln
 import kotlin.math.pow
@@ -33,20 +35,21 @@ suspend fun ank(source: Path, target: Path, compilerArgs: List<String>, ankOps: 
   val path = createTargetDirectory(source, target)
 
   val validatedPaths = path.ankFiles().fold(listOf<ValidatedNel<Throwable, Path>>()) { acc, file ->
-    val res = ValidatedNel.fromEither(
-      Either.catch {
-        val totalHeap = Runtime.getRuntime().totalMemory()
-        val usedHeap = totalHeap - Runtime.getRuntime().freeMemory()
-        val p = file.path
-        val message = "Ank Compile: [${file.index}] ${path.relativize(p)} | Used Heap: ${usedHeap.humanBytes()}"
-        printConsole(colored(ANSI_GREEN, message))
-        val preProcessed = p.processMacros()
-        val (processed, snippets) = extractCode(preProcessed)
-        val compiledResult = compileCode(p toT snippets, compilerArgs)
-        val result = replaceAnkToLang(processed, compiledResult)
-        generateFile(p, result)
-      }.mapLeft { it.nel() }
-    )
+    val res = try {
+      val totalHeap = Runtime.getRuntime().totalMemory()
+      val usedHeap = totalHeap - Runtime.getRuntime().freeMemory()
+      val p = file.path
+      val message = "Ank Compile: [${file.index}] ${path.relativize(p)} | Used Heap: ${usedHeap.humanBytes()}"
+      printConsole(colored(ANSI_GREEN, message))
+      val preProcessed = p.processMacros()
+      val (processed, snippets) = extractCode(preProcessed)
+      val compiledResult = compileCode(p toT snippets, compilerArgs)
+      val result = replaceAnkToLang(processed, compiledResult)
+      val generatedPath = generateFile(p, result)
+      generatedPath.validNel()
+    } catch (e: Throwable) {
+      e.invalidNel()
+    }
 
     acc + res
   }.sequence(ValidatedNel.applicative(NonEmptyList.semigroup<Throwable>())).fix()
