@@ -176,6 +176,50 @@ itWillReturn
 ```
 ````
 
+### `:playground`
+
+Ank also has support to turn Kotlin snippets into Kotlin Playgrounds w/ support for Arrow. 
+For a snippet to be runnable it needs to contain a `main` function,
+and you can mark the begin and end of the example using `//sampleStart` & `//sampleEnd`.
+
+Example:
+
+````
+```kotlin:ank:playground
+import arrow.core.Either
+import arrow.core.flatMap
+
+//sampleStart
+val right: Either<String, Int> = Either.Right(5)
+val value = right.flatMap{ Either.Right(it + 1) }
+//sampleEnd
+
+fun main() {
+ println("value = $value")
+}
+```
+<!-- .element: class="arrow" data-executable="true" -->
+````
+
+Output:
+
+````
+```kotlin
+import arrow.core.Either
+import arrow.core.flatMap
+
+//sampleStart
+val right: Either<String, Int> = Either.Right(5)
+val value = right.flatMap{ Either.Right(it + 1) }
+//sampleEnd
+
+fun main() {
+ println("value = $value")
+}
+```
+<!-- .element: class="arrow" data-executable="true" -->
+````
+
 ### `:replace`
 
 Example:
