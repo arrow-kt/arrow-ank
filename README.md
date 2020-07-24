@@ -104,6 +104,8 @@ The language used (Kotlin or Java) should be prepended to `:ank` e.g. `kotlin:an
 | `:silent` | Suppresses output; under this modifier the input and output text are identical. |
 | `:replace` | Replaces an entire snippet with the output of the resulting evaluation. |
 | `:outFile(<file>)` | Replaces the code fence entirely with an empty string and writes the result of the evaluated code into the specified file. |
+| `:playground` | Provides an option to run the code snippet on the website. |
+| `:fail` | The error raised from the code snippet will be appended at the end. |
 
 ### `<language>:ank`
 
@@ -314,5 +316,7 @@ Although Λnk supports both the _Tutorial_ mode (`import`s and variables previou
 
 Global properties and checks come from [**arrow**](https://github.com/arrow-kt/arrow) repository.
 
+* [How to build the library](https://github.com/arrow-kt/arrow/blob/master/docs/libraries/how-to-build-a-library.md)
 * [How to generate and validate the documentation](https://github.com/arrow-kt/arrow/blob/master/docs/libraries/how-to-generate-and-validate-documentation.md)
 * [How to run the website in your local server](https://github.com/arrow-kt/arrow/blob/master/docs/libraries/how-to-run-the-website-in-your-local-server.md)
+* [How to propose an improvement](https://github.com/arrow-kt/arrow/blob/master/docs/libraries/how-to-propose-an-improvement.md)
