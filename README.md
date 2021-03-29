@@ -1,3 +1,13 @@
+<hr>
+
+⚠️ **WARNING**
+
+The content of this repository (with its Git history) has been moved to **arrow** repository:
+
+* https://github.com/arrow-kt/arrow/tree/master/arrow-libs/ank
+
+<hr>
+
 # Λrrow Λnk
 
 [![Arrow Core logo](https://raw.githubusercontent.com/arrow-kt/arrow-site/master/docs/img/core/arrow-core-brand-sidebar.svg?sanitize=true)](https://arrow-kt.io)
